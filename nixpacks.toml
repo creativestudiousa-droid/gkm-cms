@@ -1,0 +1,8 @@
+[phases.setup]
+nixPkgs = ["nodejs_20", "python3", "gnumake", "gcc"]
+
+[phases.install]
+cmds = ["npm install --prefer-offline"]
+
+[start]
+cmd = "npx directus bootstrap && npx directus start"

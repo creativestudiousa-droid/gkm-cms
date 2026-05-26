@@ -3,13 +3,12 @@
   "version": "1.0.0",
   "description": "GK Malik & Associates — Directus CMS",
   "scripts": {
-    "start": "directus start",
-    "build": "directus bootstrap"
+    "start": "npx directus bootstrap && npx directus start"
   },
   "dependencies": {
-    "directus": "^11.0.0"
+    "directus": "10.13.4"
   },
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=18.20.0 <21"
   }
 }
