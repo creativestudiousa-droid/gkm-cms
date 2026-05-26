@@ -2,7 +2,7 @@
 nixPkgs = ["nodejs_20", "python3", "gnumake", "gcc"]
 
 [phases.install]
-cmds = ["npm install --prefer-offline"]
+cmds = ["npm install"]
 
 [start]
-cmd = "npx directus bootstrap && npx directus start"
+cmd = "sh start.sh"
