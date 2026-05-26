@@ -1,0 +1,15 @@
+{
+  "name": "gkm-directus-cms",
+  "version": "1.0.0",
+  "description": "GK Malik & Associates — Directus CMS",
+  "scripts": {
+    "start": "directus start",
+    "build": "directus bootstrap"
+  },
+  "dependencies": {
+    "directus": "^11.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
