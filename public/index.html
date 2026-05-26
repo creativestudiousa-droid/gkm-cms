@@ -1,0 +1,1298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GKM CMS</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/quill/1.3.7/quill.snow.min.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f0f2f5;--white:#fff;--sidebar:#1e293b;--sidebar-hover:#334155;
+  --primary:#2D7A4F;--primary-dark:#1f5c3a;--primary-light:#e8f5ee;
+  --text:#1e293b;--text-muted:#64748b;--border:#e2e8f0;
+  --danger:#ef4444;--warning:#f59e0b;--success:#10b981;--info:#3b82f6;
+  --radius:10px;--shadow:0 1px 3px rgba(0,0,0,.1);--shadow-md:0 4px 16px rgba(0,0,0,.1);
+}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);font-size:14px}
+/* ── LAYOUT ── */
+.cms-layout{display:flex;min-height:100vh}
+.sidebar{width:260px;background:var(--sidebar);flex-shrink:0;display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;overflow-y:auto;z-index:100;transition:transform .3s}
+.sidebar-logo{padding:20px 20px 16px;border-bottom:1px solid rgba(255,255,255,.08)}
+.sidebar-logo img{height:32px;width:auto;filter:brightness(0) invert(1)}
+.sidebar-logo span{display:block;color:rgba(255,255,255,.45);font-size:11px;margin-top:4px;letter-spacing:.04em}
+.sidebar-section{padding:16px 12px 4px;color:rgba(255,255,255,.35);font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 16px;color:rgba(255,255,255,.65);text-decoration:none;border-radius:8px;margin:1px 8px;cursor:pointer;transition:all .15s;font-size:13.5px;font-weight:500;border:none;background:none;width:calc(100% - 16px);text-align:left}
+.nav-item:hover{background:var(--sidebar-hover);color:#fff}
+.nav-item.active{background:var(--primary);color:#fff}
+.nav-item i{width:18px;text-align:center;font-size:15px}
+.nav-item .badge{margin-left:auto;background:var(--danger);color:#fff;border-radius:10px;padding:1px 7px;font-size:11px;font-weight:600}
+.main{margin-left:260px;flex:1;display:flex;flex-direction:column;min-height:100vh}
+.topbar{background:var(--white);border-bottom:1px solid var(--border);padding:0 28px;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;box-shadow:var(--shadow)}
+.topbar-title{font-size:17px;font-weight:600;color:var(--text)}
+.topbar-right{display:flex;align-items:center;gap:12px}
+.user-menu{display:flex;align-items:center;gap:10px;cursor:pointer;padding:6px 12px;border-radius:8px;transition:background .15s}
+.user-menu:hover{background:var(--bg)}
+.user-avatar{width:34px;height:34px;border-radius:50%;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px}
+.content{padding:28px;flex:1}
+/* ── CARDS ── */
+.card{background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;margin-bottom:20px}
+.card-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.card-header h3{font-size:15px;font-weight:600}
+.card-body{padding:20px}
+/* ── STAT CARDS ── */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:24px}
+.stat-card{background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);padding:20px;display:flex;align-items:center;gap:16px}
+.stat-icon{width:52px;height:52px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.stat-value{font-size:26px;font-weight:700;line-height:1}
+.stat-label{color:var(--text-muted);font-size:12.5px;margin-top:3px}
+.stat-sub{font-size:12px;color:var(--text-muted);margin-top:2px}
+/* ── BUTTONS ── */
+.btn{display:inline-flex;align-items:center;gap:7px;padding:8px 16px;border-radius:8px;font-size:13.5px;font-weight:500;cursor:pointer;border:none;transition:all .15s;text-decoration:none;white-space:nowrap}
+.btn-primary{background:var(--primary);color:#fff}.btn-primary:hover{background:var(--primary-dark)}
+.btn-secondary{background:var(--bg);color:var(--text);border:1px solid var(--border)}.btn-secondary:hover{background:var(--border)}
+.btn-danger{background:var(--danger);color:#fff}.btn-danger:hover{background:#dc2626}
+.btn-ghost{background:none;color:var(--text-muted);border:1px solid var(--border)}.btn-ghost:hover{background:var(--bg)}
+.btn-sm{padding:5px 12px;font-size:12.5px}
+.btn-icon{padding:7px;width:34px;height:34px;justify-content:center}
+/* ── FORMS ── */
+.form-group{margin-bottom:18px}
+.form-label{display:block;font-size:13px;font-weight:500;color:var(--text);margin-bottom:6px}
+.form-label span{color:var(--danger);margin-left:2px}
+.form-input,.form-select,.form-textarea{width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13.5px;font-family:inherit;color:var(--text);background:#fff;transition:border-color .15s;outline:none}
+.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(45,122,79,.12)}
+.form-textarea{resize:vertical;min-height:90px}
+.form-hint{font-size:12px;color:var(--text-muted);margin-top:4px}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.form-row.three{grid-template-columns:1fr 1fr 1fr}
+/* ── TABLE ── */
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+thead tr{background:#f8fafc}
+th{text-align:left;padding:11px 16px;font-size:12px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid var(--border)}
+td{padding:12px 16px;border-bottom:1px solid var(--border);font-size:13.5px;vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#f8fafc}
+/* ── BADGES ── */
+.badge{display:inline-flex;align-items:center;padding:3px 9px;border-radius:20px;font-size:11.5px;font-weight:600;gap:4px}
+.badge-success{background:#dcfce7;color:#166534}
+.badge-draft{background:#f1f5f9;color:#475569}
+.badge-warning{background:#fef3c7;color:#92400e}
+.badge-danger{background:#fee2e2;color:#991b1b}
+.badge-info{background:#dbeafe;color:#1e40af}
+.badge-gst{background:#fce7f3;color:#9d174d}
+.badge-tds{background:#fff7ed;color:#9a3412}
+/* ── MODAL ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:flex;align-items:flex-start;justify-content:center;padding:40px 20px;overflow-y:auto;backdrop-filter:blur(2px)}
+.modal{background:#fff;border-radius:14px;width:100%;max-width:780px;box-shadow:0 20px 60px rgba(0,0,0,.2);animation:slideUp .2s ease}
+.modal-lg{max-width:1100px}
+.modal-header{padding:20px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.modal-header h3{font-size:16px;font-weight:600}
+.modal-close{width:32px;height:32px;border-radius:8px;border:none;background:var(--bg);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;color:var(--text-muted);transition:background .15s}
+.modal-close:hover{background:var(--border)}
+.modal-body{padding:24px}
+.modal-footer{padding:16px 24px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:flex-end;gap:10px}
+@keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+/* ── EDITOR ── */
+.editor-layout{display:grid;grid-template-columns:1fr 280px;gap:20px;align-items:start}
+.editor-sidebar{display:flex;flex-direction:column;gap:16px}
+.editor-card{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);padding:16px}
+.editor-card h4{font-size:13px;font-weight:600;margin-bottom:12px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em}
+.ql-editor{min-height:400px;font-size:15px;font-family:'Inter',sans-serif;line-height:1.7}
+.ql-toolbar{border-radius:8px 8px 0 0}
+.ql-container{border-radius:0 0 8px 8px;font-size:15px}
+/* ── MEDIA GRID ── */
+.media-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px}
+.media-item{border:2px solid var(--border);border-radius:10px;overflow:hidden;cursor:pointer;transition:all .2s;position:relative}
+.media-item:hover{border-color:var(--primary);box-shadow:0 4px 16px rgba(45,122,79,.2)}
+.media-item.selected{border-color:var(--primary);box-shadow:0 0 0 3px rgba(45,122,79,.25)}
+.media-item img{width:100%;height:120px;object-fit:cover;display:block}
+.media-item-info{padding:8px 10px}
+.media-item-name{font-size:11.5px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.media-item-size{font-size:11px;color:var(--text-muted)}
+.media-item .delete-btn{position:absolute;top:6px;right:6px;width:26px;height:26px;border-radius:6px;background:rgba(0,0,0,.6);color:#fff;border:none;cursor:pointer;display:none;align-items:center;justify-content:center;font-size:11px}
+.media-item:hover .delete-btn{display:flex}
+/* ── UPLOAD ZONE ── */
+.upload-zone{border:2px dashed var(--border);border-radius:12px;padding:40px;text-align:center;cursor:pointer;transition:all .2s}
+.upload-zone:hover,.upload-zone.dragover{border-color:var(--primary);background:var(--primary-light)}
+.upload-zone i{font-size:36px;color:var(--text-muted);margin-bottom:12px;display:block}
+/* ── SEARCH ── */
+.search-row{display:flex;gap:12px;align-items:center;margin-bottom:20px;flex-wrap:wrap}
+.search-input{position:relative;flex:1;min-width:200px}
+.search-input i{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--text-muted)}
+.search-input input{padding-left:34px;width:100%}
+/* ── TOAST ── */
+.toast-wrap{position:fixed;top:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px}
+.toast{background:#1e293b;color:#fff;padding:12px 18px;border-radius:10px;font-size:13.5px;box-shadow:0 4px 16px rgba(0,0,0,.2);display:flex;align-items:center;gap:10px;animation:slideIn .2s ease}
+.toast.success{background:#166534}.toast.error{background:#991b1b}.toast.info{background:#1e40af}
+@keyframes slideIn{from{opacity:0;transform:translateX(100%)}to{opacity:1;transform:translateX(0)}}
+/* ── TABS ── */
+.tabs{display:flex;gap:4px;border-bottom:2px solid var(--border);margin-bottom:20px}
+.tab{padding:9px 18px;border-radius:8px 8px 0 0;cursor:pointer;font-weight:500;font-size:13.5px;color:var(--text-muted);border:none;background:none;transition:all .15s}
+.tab.active{color:var(--primary);border-bottom:2px solid var(--primary);margin-bottom:-2px}
+.tab:hover:not(.active){color:var(--text);background:var(--bg)}
+/* ── LOGIN ── */
+.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#0F1C35 0%,#1a3a28 50%,#2D7A4F 100%)}
+.login-box{background:#fff;border-radius:16px;padding:40px;width:100%;max-width:420px;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.login-logo{text-align:center;margin-bottom:28px}
+.login-logo img{height:44px;width:auto}
+.login-logo p{color:var(--text-muted);margin-top:6px;font-size:13.5px}
+.login-error{background:#fee2e2;color:#991b1b;padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:16px;display:none}
+/* ── MISC ── */
+.sep{height:1px;background:var(--border);margin:20px 0}
+.text-muted{color:var(--text-muted)}
+.text-sm{font-size:12.5px}
+.flex{display:flex;align-items:center}
+.gap-2{gap:8px}.gap-3{gap:12px}
+.ms-auto{margin-left:auto}
+.empty-state{text-align:center;padding:60px 20px;color:var(--text-muted)}
+.empty-state i{font-size:48px;margin-bottom:12px;display:block;opacity:.3}
+.page-title{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
+.page-title h1{font-size:22px;font-weight:700}
+.compliance-row{display:grid;grid-template-columns:1fr 100px 100px 120px 80px;gap:8px;align-items:center;padding:12px 0;border-bottom:1px solid var(--border);font-size:13.5px}
+.compliance-row:last-child{border-bottom:none}
+.days-badge{font-size:12px;font-weight:600;padding:3px 8px;border-radius:6px}
+.days-urgent{background:#fee2e2;color:#991b1b}
+.days-soon{background:#fef3c7;color:#92400e}
+.days-ok{background:#f1f5f9;color:#475569}
+.sidebar-footer{margin-top:auto;padding:12px 8px;border-top:1px solid rgba(255,255,255,.08)}
+.view-site-btn{display:flex;align-items:center;gap:10px;padding:9px 16px;color:rgba(255,255,255,.5);border-radius:8px;text-decoration:none;font-size:13px;transition:all .15s}
+.view-site-btn:hover{background:rgba(255,255,255,.07);color:#fff}
+/* ── RESPONSIVE ── */
+@media(max-width:768px){
+  .sidebar{transform:translateX(-100%)}.sidebar.open{transform:translateX(0)}
+  .main{margin-left:0}.form-row{grid-template-columns:1fr}.editor-layout{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div class="toast-wrap" id="toasts"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/quill/1.3.7/quill.min.js"></script>
+<script>
+// ════════════════════════════════════════════════
+// GKM CMS — Complete Frontend
+// ════════════════════════════════════════════════
+
+const API = window.location.origin;
+let currentUser = null;
+let quillInstance = null;
+let currentPage = 'dashboard';
+let mediaPickerCallback = null;
+
+// ── Utilities ──
+const getToken = () => localStorage.getItem('gkm_cms_token');
+const setToken = (t) => localStorage.setItem('gkm_cms_token', t);
+const clearToken = () => { localStorage.removeItem('gkm_cms_token'); localStorage.removeItem('gkm_cms_user'); };
+
+async function request(method, path, body = null) {
+  const opts = { method, headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getToken() } };
+  if (body) opts.body = JSON.stringify(body);
+  const res = await fetch(API + path, opts);
+  if (res.status === 401) { clearToken(); renderLogin(); return null; }
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Request failed');
+  return data;
+}
+
+function toast(msg, type = 'success') {
+  const wrap = document.getElementById('toasts');
+  const icons = { success: 'fa-check-circle', error: 'fa-circle-xmark', info: 'fa-circle-info' };
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  t.innerHTML = `<i class="fas ${icons[type]||icons.success}"></i> ${msg}`;
+  wrap.appendChild(t);
+  setTimeout(() => t.remove(), 3500);
+}
+
+function fmtDate(d) {
+  if (!d) return '—';
+  return new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+}
+
+function daysUntil(d) {
+  const diff = Math.ceil((new Date(d) - new Date()) / 86400000);
+  if (diff < 0) return `<span class="days-badge days-urgent">${Math.abs(diff)}d overdue</span>`;
+  if (diff <= 7) return `<span class="days-badge days-urgent">${diff}d</span>`;
+  if (diff <= 30) return `<span class="days-badge days-soon">${diff}d</span>`;
+  return `<span class="days-badge days-ok">${diff}d</span>`;
+}
+
+function slugify(t) { return t.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''); }
+
+// ── App Shell ──
+function renderShell() {
+  const u = currentUser || {};
+  const initials = (u.name || 'GK').split(' ').map(p => p[0]).join('').slice(0,2).toUpperCase();
+  document.getElementById('app').innerHTML = `
+    <div class="cms-layout">
+      <aside class="sidebar" id="sidebar">
+        <div class="sidebar-logo">
+          <img src="/cms-logo.png" onerror="this.style.display='none';this.nextSibling.style.display='block'" alt="GKM">
+          <div style="color:#fff;font-weight:700;font-size:16px;display:none">GK Malik & Associates</div>
+          <span>Content Management System</span>
+        </div>
+        <div class="sidebar-section">Main</div>
+        <a class="nav-item" onclick="navigate('dashboard')" id="nav-dashboard"><i class="fas fa-gauge"></i> Dashboard</a>
+        <div class="sidebar-section">Content</div>
+        <a class="nav-item" onclick="navigate('pages')" id="nav-pages"><i class="fas fa-file-alt"></i> Pages</a>
+        <a class="nav-item" onclick="navigate('posts')" id="nav-posts"><i class="fas fa-newspaper"></i> Blog / Insights</a>
+        <a class="nav-item" onclick="navigate('media')" id="nav-media"><i class="fas fa-images"></i> Media Library</a>
+        <div class="sidebar-section">Site</div>
+        <a class="nav-item" onclick="navigate('settings')" id="nav-settings"><i class="fas fa-sliders"></i> Site Settings</a>
+        <a class="nav-item" onclick="navigate('menus')" id="nav-menus"><i class="fas fa-bars"></i> Menus</a>
+        <div class="sidebar-section">CRM</div>
+        <a class="nav-item" onclick="navigate('leads')" id="nav-leads"><i class="fas fa-inbox"></i> Leads <span class="badge" id="leads-badge" style="display:none"></span></a>
+        <a class="nav-item" onclick="navigate('clients')" id="nav-clients"><i class="fas fa-users"></i> Clients</a>
+        <a class="nav-item" onclick="navigate('compliance')" id="nav-compliance"><i class="fas fa-calendar-check"></i> Compliance</a>
+        <div class="sidebar-section">Tools</div>
+        <a class="nav-item" onclick="navigate('ai')" id="nav-ai"><i class="fas fa-robot"></i> GKM AI Assistant</a>
+        <div class="sidebar-footer">
+          <a class="view-site-btn" href="https://gkmalik.netlify.app" target="_blank"><i class="fas fa-external-link-alt"></i> View Website</a>
+        </div>
+      </aside>
+      <div class="main">
+        <div class="topbar">
+          <div class="flex gap-2">
+            <button class="btn btn-ghost btn-icon d-md-none" onclick="document.getElementById('sidebar').classList.toggle('open')">
+              <i class="fas fa-bars"></i>
+            </button>
+            <span class="topbar-title" id="page-title">Dashboard</span>
+          </div>
+          <div class="topbar-right">
+            <div class="user-menu" onclick="showUserMenu()">
+              <div class="user-avatar">${initials}</div>
+              <span style="font-size:13.5px;font-weight:500">${u.name || 'Admin'}</span>
+              <i class="fas fa-chevron-down" style="font-size:11px;color:var(--text-muted)"></i>
+            </div>
+          </div>
+        </div>
+        <div class="content" id="content">Loading...</div>
+      </div>
+    </div>`;
+  loadNewLeadsBadge();
+}
+
+function setActive(page) {
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+  const el = document.getElementById('nav-' + page);
+  if (el) el.classList.add('active');
+}
+
+async function navigate(page) {
+  currentPage = page;
+  setActive(page);
+  const titles = { dashboard:'Dashboard', pages:'Pages', posts:'Blog / Insights', media:'Media Library', settings:'Site Settings', menus:'Menus', leads:'Leads & Enquiries', clients:'Clients', compliance:'Compliance Calendar', ai:'GKM AI Assistant' };
+  document.getElementById('page-title').textContent = titles[page] || page;
+  const content = document.getElementById('content');
+  content.innerHTML = '<div style="padding:40px;text-align:center;color:var(--text-muted)"><i class="fas fa-spinner fa-spin" style="font-size:24px"></i></div>';
+  const pages = { dashboard: renderDashboard, pages: renderPages, posts: renderPosts, media: renderMedia, settings: renderSettings, leads: renderLeads, clients: renderClients, compliance: renderCompliance, ai: renderAI, menus: renderMenus };
+  if (pages[page]) await pages[page]();
+}
+
+async function loadNewLeadsBadge() {
+  try {
+    const d = await request('GET', '/api/leads?status=new');
+    const badge = document.getElementById('leads-badge');
+    if (badge && d?.total > 0) { badge.textContent = d.total; badge.style.display = 'inline'; }
+  } catch {}
+}
+
+function showUserMenu() {
+  const existing = document.getElementById('user-dropdown');
+  if (existing) { existing.remove(); return; }
+  const dropdown = document.createElement('div');
+  dropdown.id = 'user-dropdown';
+  dropdown.style.cssText = 'position:fixed;top:60px;right:16px;background:#fff;border:1px solid var(--border);border-radius:10px;box-shadow:var(--shadow-md);z-index:300;min-width:180px;padding:6px';
+  dropdown.innerHTML = `
+    <div style="padding:10px 14px;border-bottom:1px solid var(--border);margin-bottom:4px">
+      <div style="font-weight:600;font-size:13.5px">${currentUser?.name}</div>
+      <div style="font-size:12px;color:var(--text-muted)">${currentUser?.email}</div>
+    </div>
+    <a class="nav-item" style="margin:0;padding:8px 14px;color:var(--text)" onclick="navigate('settings');document.getElementById('user-dropdown')?.remove()"><i class="fas fa-cog"></i> Settings</a>
+    <a class="nav-item" style="margin:0;padding:8px 14px;color:var(--danger)" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Sign Out</a>`;
+  document.body.appendChild(dropdown);
+  setTimeout(() => document.addEventListener('click', function h(e) { if (!dropdown.contains(e.target)) { dropdown.remove(); document.removeEventListener('click',h); } }), 100);
+}
+
+function logout() { clearToken(); renderLogin(); }
+
+// ════════════════════════════════════════
+// LOGIN
+// ════════════════════════════════════════
+function renderLogin() {
+  document.getElementById('app').innerHTML = `
+    <div class="login-wrap">
+      <div class="login-box">
+        <div class="login-logo">
+          <img src="/cms-logo.png" onerror="this.style.display='none'" alt="GKM">
+          <h2 style="font-size:22px;font-weight:700;margin-top:8px">GKM Content Manager</h2>
+          <p>Sign in to manage your website</p>
+        </div>
+        <div class="login-error" id="login-err"></div>
+        <div class="form-group">
+          <label class="form-label">Email Address</label>
+          <input class="form-input" id="login-email" type="email" value="admin@gkmalik.com" placeholder="admin@gkmalik.com">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <div style="position:relative">
+            <input class="form-input" id="login-pass" type="password" value="GKMAdmin2025!" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()">
+            <button style="position:absolute;right:10px;top:50%;transform:translateY(-50%);border:none;background:none;cursor:pointer;color:var(--text-muted)" onclick="const i=document.getElementById('login-pass');i.type=i.type==='password'?'text':'password'"><i class="fas fa-eye"></i></button>
+          </div>
+        </div>
+        <button class="btn btn-primary" style="width:100%;justify-content:center;padding:11px" onclick="doLogin()" id="login-btn">
+          <i class="fas fa-sign-in-alt"></i> Sign In
+        </button>
+        <p style="text-align:center;margin-top:16px;font-size:12px;color:var(--text-muted)">GK Malik & Associates · Hyderabad</p>
+      </div>
+    </div>`;
+}
+
+async function doLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const pass = document.getElementById('login-pass').value;
+  const err = document.getElementById('login-err');
+  const btn = document.getElementById('login-btn');
+  err.style.display = 'none';
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Signing in...';
+  btn.disabled = true;
+  try {
+    const data = await request('POST', '/api/auth/login', { email, password: pass });
+    if (!data) { btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Sign In'; btn.disabled = false; return; }
+    setToken(data.token);
+    localStorage.setItem('gkm_cms_user', JSON.stringify(data.user));
+    currentUser = data.user;
+    renderShell();
+    navigate('dashboard');
+  } catch (e) {
+    err.textContent = e.message; err.style.display = 'block';
+    btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Sign In'; btn.disabled = false;
+  }
+}
+
+// ════════════════════════════════════════
+// DASHBOARD
+// ════════════════════════════════════════
+async function renderDashboard() {
+  try {
+    const d = await request('GET', '/api/dashboard');
+    document.getElementById('content').innerHTML = `
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon" style="background:#dbeafe;color:#1e40af"><i class="fas fa-file-alt"></i></div>
+          <div><div class="stat-value">${d.pages.total}</div><div class="stat-label">Pages</div></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background:#dcfce7;color:#166534"><i class="fas fa-newspaper"></i></div>
+          <div><div class="stat-value">${d.posts.published}</div><div class="stat-label">Published Posts</div><div class="stat-sub">${d.posts.drafts} drafts</div></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background:#fef3c7;color:#92400e"><i class="fas fa-inbox"></i></div>
+          <div><div class="stat-value">${d.leads.new_leads}</div><div class="stat-label">New Leads</div><div class="stat-sub">${d.leads.total} total</div></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background:#f3e8ff;color:#6b21a8"><i class="fas fa-users"></i></div>
+          <div><div class="stat-value">${d.clients.active}</div><div class="stat-label">Active Clients</div><div class="stat-sub">${d.clients.total} total</div></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background:#fee2e2;color:#991b1b"><i class="fas fa-calendar-check"></i></div>
+          <div><div class="stat-value">${d.compliance.urgent}</div><div class="stat-label">Deadlines This Week</div></div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+        <div class="card">
+          <div class="card-header"><h3>Recent Enquiries</h3><button class="btn btn-ghost btn-sm" onclick="navigate('leads')">View All</button></div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Name</th><th>Service</th><th>Date</th><th>Status</th></tr></thead>
+              <tbody>${d.recent_leads.length ? d.recent_leads.map(l => `
+                <tr>
+                  <td><div style="font-weight:500">${l.name||'—'}</div><div class="text-sm text-muted">${l.email||''}</div></td>
+                  <td><span class="badge badge-info">${l.service||'General'}</span></td>
+                  <td class="text-muted text-sm">${fmtDate(l.created_at)}</td>
+                  <td><span class="badge badge-${l.status==='new'?'danger':l.status==='contacted'?'warning':'success'}">${l.status}</span></td>
+                </tr>`).join('') : '<tr><td colspan="4" style="text-align:center;padding:20px;color:var(--text-muted)">No enquiries yet</td></tr>'}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><h3>Upcoming Compliance</h3><button class="btn btn-ghost btn-sm" onclick="navigate('compliance')">View All</button></div>
+          <div class="card-body" style="padding:0">
+            ${d.upcoming_dates.map(e => `
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border)">
+                <div>
+                  <div style="font-weight:500;font-size:13.5px">${e.title}</div>
+                  <div class="text-sm text-muted">${fmtDate(e.due_date)}</div>
+                </div>
+                <div style="display:flex;align-items:center;gap:8px">
+                  <span class="badge badge-${e.type==='GST'?'gst':e.type==='TDS'?'tds':'info'}">${e.type}</span>
+                  ${daysUntil(e.due_date)}
+                </div>
+              </div>`).join('')}
+          </div>
+        </div>
+      </div>`;
+  } catch (e) { document.getElementById('content').innerHTML = `<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>Error loading dashboard: ${e.message}</p></div>`; }
+}
+
+// ════════════════════════════════════════
+// PAGES
+// ════════════════════════════════════════
+async function renderPages() {
+  const d = await request('GET', '/api/pages');
+  document.getElementById('content').innerHTML = `
+    <div class="page-title">
+      <h1>Pages</h1>
+      <button class="btn btn-primary" onclick="openPageEditor()"><i class="fas fa-plus"></i> New Page</button>
+    </div>
+    <div class="card">
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Title</th><th>Slug</th><th>Template</th><th>Status</th><th>Last Updated</th><th>Actions</th></tr></thead>
+          <tbody id="pages-tbody">
+            ${d.data.length ? d.data.map(p => `
+              <tr>
+                <td><div style="font-weight:600">${p.title}</div></td>
+                <td><code style="background:var(--bg);padding:2px 8px;border-radius:5px;font-size:12px">/${p.slug}</code></td>
+                <td><span class="text-muted text-sm">${p.template||'default'}</span></td>
+                <td><span class="badge badge-${p.status==='published'?'success':'draft'}">${p.status}</span></td>
+                <td class="text-muted text-sm">${fmtDate(p.updated_at)}</td>
+                <td>
+                  <div class="flex gap-2">
+                    <button class="btn btn-ghost btn-sm btn-icon" onclick="openPageEditor(${p.id})" title="Edit"><i class="fas fa-pen"></i></button>
+                    <a class="btn btn-ghost btn-sm btn-icon" href="https://gkmalik.netlify.app/${p.slug}.html" target="_blank" title="View"><i class="fas fa-external-link-alt"></i></a>
+                  </div>
+                </td>
+              </tr>`).join('') : '<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--text-muted)">No pages yet</td></tr>'}
+          </tbody>
+        </table>
+      </div>
+    </div>`;
+}
+
+async function openPageEditor(id = null) {
+  let page = {};
+  if (id) { page = await request('GET', '/api/pages/' + id); }
+  showModal(`
+    <div class="modal-header">
+      <h3>${id ? 'Edit Page' : 'New Page'}</h3>
+      <button class="modal-close" onclick="closeModal()"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="editor-layout">
+        <div>
+          <div class="form-group">
+            <label class="form-label">Page Title <span>*</span></label>
+            <input class="form-input" id="page-title" value="${page.title||''}" placeholder="e.g. About Us" oninput="if(!${!!id})document.getElementById('page-slug').value=slugify(this.value)">
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">URL Slug <span>*</span></label>
+              <input class="form-input" id="page-slug" value="${page.slug||''}" placeholder="about">
+              <div class="form-hint">gkmalik.netlify.app/<strong>slug</strong>.html</div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Template</label>
+              <select class="form-select" id="page-template">
+                <option value="default" ${page.template==='default'?'selected':''}>Default</option>
+                <option value="home" ${page.template==='home'?'selected':''}>Homepage</option>
+                <option value="services" ${page.template==='services'?'selected':''}>Services</option>
+                <option value="contact" ${page.template==='contact'?'selected':''}>Contact</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Hero Heading</label>
+            <input class="form-input" id="page-hero-heading" value="${page.hero_heading||''}" placeholder="Main headline for this page">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Hero Subheading</label>
+            <textarea class="form-textarea" id="page-hero-sub" placeholder="Supporting text under the heading">${page.hero_subheading||''}</textarea>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">CTA Button Text</label>
+              <input class="form-input" id="page-cta-text" value="${page.hero_cta_text||'Book Consultation'}">
+            </div>
+            <div class="form-group">
+              <label class="form-label">CTA Button Link</label>
+              <input class="form-input" id="page-cta-link" value="${page.hero_cta_link||'/contact.html'}">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Page Content</label>
+            <div id="page-content-editor" style="border:1.5px solid var(--border);border-radius:8px"></div>
+          </div>
+        </div>
+        <div class="editor-sidebar">
+          <div class="editor-card">
+            <h4>Publish</h4>
+            <select class="form-select" id="page-status">
+              <option value="published" ${page.status!=='draft'?'selected':''}>Published</option>
+              <option value="draft" ${page.status==='draft'?'selected':''}>Draft</option>
+            </select>
+          </div>
+          <div class="editor-card">
+            <h4>Hero Image</h4>
+            <input class="form-input" id="page-hero-image" value="${page.hero_image||''}" placeholder="Image URL" style="margin-bottom:8px">
+            <button class="btn btn-ghost btn-sm" style="width:100%" onclick="openMediaPicker('page-hero-image')"><i class="fas fa-images"></i> Choose from Media</button>
+          </div>
+          <div class="editor-card">
+            <h4>SEO</h4>
+            <div class="form-group">
+              <label class="form-label">Meta Title</label>
+              <input class="form-input" id="page-meta-title" value="${page.meta_title||''}" placeholder="Defaults to page title">
+            </div>
+            <div class="form-group" style="margin-bottom:0">
+              <label class="form-label">Meta Description</label>
+              <textarea class="form-textarea" id="page-meta-desc" style="min-height:70px" placeholder="160 characters max">${page.meta_description||''}</textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="savePage(${id})"><i class="fas fa-save"></i> Save Page</button>
+    </div>`, 'modal-lg');
+
+  setTimeout(() => {
+    quillInstance = new Quill('#page-content-editor', {
+      theme: 'snow',
+      modules: { toolbar: [[{'header':[2,3,4,false]}],['bold','italic','underline'],['link','image','blockquote'],['ordered-list','bullet'],['clean']] },
+      placeholder: 'Write your page content here...',
+    });
+    if (page.content) quillInstance.root.innerHTML = page.content;
+  }, 100);
+}
+
+async function savePage(id) {
+  const body = {
+    title: document.getElementById('page-title').value.trim(),
+    slug: document.getElementById('page-slug').value.trim(),
+    template: document.getElementById('page-template').value,
+    hero_heading: document.getElementById('page-hero-heading').value,
+    hero_subheading: document.getElementById('page-hero-sub').value,
+    hero_cta_text: document.getElementById('page-cta-text').value,
+    hero_cta_link: document.getElementById('page-cta-link').value,
+    hero_image: document.getElementById('page-hero-image').value,
+    content: quillInstance ? quillInstance.root.innerHTML : '',
+    status: document.getElementById('page-status').value,
+    meta_title: document.getElementById('page-meta-title').value,
+    meta_description: document.getElementById('page-meta-desc').value,
+  };
+  if (!body.title || !body.slug) { toast('Title and slug are required', 'error'); return; }
+  try {
+    if (id) await request('PUT', '/api/pages/' + id, body);
+    else await request('POST', '/api/pages', body);
+    toast('Page saved!'); closeModal(); renderPages();
+  } catch (e) { toast(e.message, 'error'); }
+}
+
+// ════════════════════════════════════════
+// BLOG POSTS
+// ════════════════════════════════════════
+async function renderPosts() {
+  const d = await request('GET', '/api/posts?limit=30');
+  document.getElementById('content').innerHTML = `
+    <div class="page-title">
+      <h1>Blog / Insights</h1>
+      <button class="btn btn-primary" onclick="openPostEditor()"><i class="fas fa-plus"></i> New Post</button>
+    </div>
+    <div class="search-row">
+      <div class="search-input"><i class="fas fa-search"></i><input class="form-input" id="post-search" placeholder="Search posts..." onkeydown="if(event.key==='Enter')filterPosts()"></div>
+      <select class="form-select" style="width:160px" id="post-status-filter" onchange="filterPosts()">
+        <option value="">All Status</option>
+        <option value="published">Published</option>
+        <option value="draft">Draft</option>
+      </select>
+      <select class="form-select" style="width:180px" id="post-cat-filter" onchange="filterPosts()">
+        <option value="">All Categories</option>
+        <option>GST</option><option>Income Tax</option><option>NGO Compliance</option>
+        <option>FCRA</option><option>Transfer Pricing</option><option>NRI</option>
+        <option>Startups</option><option>Audit</option><option>CFO</option>
+      </select>
+    </div>
+    <div class="card">
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Title</th><th>Category</th><th>Author</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead>
+          <tbody id="posts-tbody">
+            ${renderPostRows(d.data)}
+          </tbody>
+        </table>
+      </div>
+    </div>`;
+}
+
+function renderPostRows(posts) {
+  if (!posts.length) return '<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--text-muted)">No posts yet. <a href="#" onclick="openPostEditor()" style="color:var(--primary)">Create your first post</a></td></tr>';
+  return posts.map(p => `
+    <tr>
+      <td>
+        <div style="display:flex;align-items:center;gap:10px">
+          ${p.thumbnail ? `<img src="${p.thumbnail}" style="width:52px;height:38px;object-fit:cover;border-radius:6px;flex-shrink:0" onerror="this.style.display='none'">` : '<div style="width:52px;height:38px;background:var(--bg);border-radius:6px;flex-shrink:0"></div>'}
+          <div>
+            <div style="font-weight:600">${p.title}</div>
+            <div class="text-sm text-muted">/insights/${p.slug}</div>
+          </div>
+        </div>
+      </td>
+      <td>${p.category ? `<span class="badge badge-info">${p.category}</span>` : '—'}</td>
+      <td class="text-muted text-sm">${p.author||'—'}</td>
+      <td><span class="badge badge-${p.status==='published'?'success':'draft'}">${p.status}</span>${p.featured?'<span class="badge badge-warning" style="margin-left:4px">Featured</span>':''}</td>
+      <td class="text-muted text-sm">${fmtDate(p.created_at)}</td>
+      <td>
+        <div class="flex gap-2">
+          <button class="btn btn-ghost btn-sm btn-icon" onclick="openPostEditor(${p.id})" title="Edit"><i class="fas fa-pen"></i></button>
+          <button class="btn btn-ghost btn-sm btn-icon" onclick="deletePost(${p.id})" title="Delete" style="color:var(--danger)"><i class="fas fa-trash"></i></button>
+        </div>
+      </td>
+    </tr>`).join('');
+}
+
+async function filterPosts() {
+  const search = document.getElementById('post-search').value;
+  const status = document.getElementById('post-status-filter').value;
+  const category = document.getElementById('post-cat-filter').value;
+  let url = '/api/posts?limit=30';
+  if (status) url += '&status=' + status;
+  if (category) url += '&category=' + encodeURIComponent(category);
+  if (search) url += '&search=' + encodeURIComponent(search);
+  const d = await request('GET', url);
+  document.getElementById('posts-tbody').innerHTML = renderPostRows(d.data);
+}
+
+async function openPostEditor(id = null) {
+  let post = {};
+  if (id) post = await request('GET', '/api/posts/' + id);
+  showModal(`
+    <div class="modal-header">
+      <h3>${id ? 'Edit Post' : 'New Blog Post'}</h3>
+      <button class="modal-close" onclick="closeModal()"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="editor-layout">
+        <div>
+          <div class="form-group">
+            <label class="form-label">Post Title <span>*</span></label>
+            <input class="form-input" style="font-size:18px;font-weight:600" id="post-title" value="${post.title||''}" placeholder="Enter a compelling title..." oninput="if(!${!!id})document.getElementById('post-slug').value=slugify(this.value)">
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">URL Slug <span>*</span></label>
+              <input class="form-input" id="post-slug" value="${post.slug||''}" placeholder="url-friendly-slug">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Category</label>
+              <select class="form-select" id="post-category">
+                <option value="">Select...</option>
+                ${['GST','Income Tax','NGO Compliance','FCRA','Transfer Pricing','NRI','Startups','Audit','CFO'].map(c => `<option ${post.category===c?'selected':''}>${c}</option>`).join('')}
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Summary / Excerpt</label>
+            <textarea class="form-textarea" id="post-summary" placeholder="Brief description shown in listings (2-3 sentences)">${post.summary||''}</textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Article Content <span>*</span></label>
+            <div id="post-editor" style="border:1.5px solid var(--border);border-radius:8px"></div>
+          </div>
+        </div>
+        <div class="editor-sidebar">
+          <div class="editor-card">
+            <h4>Publish</h4>
+            <div class="form-group" style="margin-bottom:10px">
+              <label class="form-label">Status</label>
+              <select class="form-select" id="post-status">
+                <option value="draft" ${post.status!=='published'?'selected':''}>Draft</option>
+                <option value="published" ${post.status==='published'?'selected':''}>Published</option>
+              </select>
+            </div>
+            <div class="form-group" style="margin-bottom:10px">
+              <label class="form-label">Reading Time (mins)</label>
+              <input class="form-input" type="number" id="post-read-time" value="${post.read_time||5}" min="1">
+            </div>
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13.5px">
+              <input type="checkbox" id="post-featured" ${post.featured?'checked':''}> Featured Post
+            </label>
+          </div>
+          <div class="editor-card">
+            <h4>Featured Image</h4>
+            <input class="form-input" id="post-thumbnail" value="${post.thumbnail||''}" placeholder="Image URL" style="margin-bottom:8px" oninput="const img=document.getElementById('thumb-prev');if(this.value){img.src=this.value;img.style.display='block'}else img.style.display='none'">
+            ${post.thumbnail ? `<img id="thumb-prev" src="${post.thumbnail}" style="width:100%;border-radius:8px;margin-bottom:8px;object-fit:cover;height:100px">` : `<img id="thumb-prev" style="display:none;width:100%;border-radius:8px;margin-bottom:8px;object-fit:cover;height:100px">`}
+            <button class="btn btn-ghost btn-sm" style="width:100%" onclick="openMediaPicker('post-thumbnail')"><i class="fas fa-images"></i> Choose from Media</button>
+          </div>
+          <div class="editor-card">
+            <h4>Author</h4>
+            <input class="form-input" id="post-author" value="${post.author||'GK Malik & Associates'}">
+          </div>
+          <div class="editor-card">
+            <h4>SEO</h4>
+            <div class="form-group">
+              <label class="form-label">Meta Title</label>
+              <input class="form-input" id="post-meta-title" value="${post.meta_title||''}">
+            </div>
+            <div class="form-group" style="margin-bottom:0">
+              <label class="form-label">Meta Description</label>
+              <textarea class="form-textarea" id="post-meta-desc" style="min-height:70px">${post.meta_description||''}</textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-ghost" onclick="savePost(${id},'draft')"><i class="fas fa-save"></i> Save Draft</button>
+      <button class="btn btn-primary" onclick="savePost(${id},'published')"><i class="fas fa-globe"></i> Publish</button>
+    </div>`, 'modal-lg');
+
+  setTimeout(() => {
+    quillInstance = new Quill('#post-editor', {
+      theme: 'snow',
+      modules: { toolbar: [
+        [{'header':[2,3,4,false]}],
+        ['bold','italic','underline','strike'],
+        ['blockquote','code-block'],
+        [{'list':'ordered'},{'list':'bullet'}],
+        ['link','image'],
+        [{'color':[]},{'background':[]}],
+        ['clean']
+      ]},
+      placeholder: 'Write your article here...',
+    });
+    if (post.content) quillInstance.root.innerHTML = post.content;
+  }, 100);
+}
+
+async function savePost(id, status = null) {
+  const body = {
+    title: document.getElementById('post-title').value.trim(),
+    slug: document.getElementById('post-slug').value.trim(),
+    category: document.getElementById('post-category').value,
+    summary: document.getElementById('post-summary').value,
+    content: quillInstance ? quillInstance.root.innerHTML : '',
+    thumbnail: document.getElementById('post-thumbnail').value,
+    author: document.getElementById('post-author').value,
+    read_time: +document.getElementById('post-read-time').value,
+    featured: document.getElementById('post-featured').checked,
+    status: status || document.getElementById('post-status').value,
+    meta_title: document.getElementById('post-meta-title').value,
+    meta_description: document.getElementById('post-meta-desc').value,
+  };
+  if (!body.title || !body.slug) { toast('Title and slug are required', 'error'); return; }
+  try {
+    if (id) await request('PUT', '/api/posts/' + id, body);
+    else await request('POST', '/api/posts', body);
+    toast(body.status === 'published' ? 'Post published!' : 'Draft saved!');
+    closeModal(); renderPosts();
+  } catch (e) { toast(e.message, 'error'); }
+}
+
+async function deletePost(id) {
+  if (!confirm('Delete this post permanently?')) return;
+  try { await request('DELETE', '/api/posts/' + id); toast('Post deleted'); renderPosts(); }
+  catch (e) { toast(e.message, 'error'); }
+}
+
+// ════════════════════════════════════════
+// MEDIA LIBRARY
+// ════════════════════════════════════════
+async function renderMedia(pickerMode = false, callback = null) {
+  const d = await request('GET', '/api/media');
+  const el = pickerMode ? document.getElementById('media-picker-content') : document.getElementById('content');
+  if (!el) return;
+  el.innerHTML = `
+    ${!pickerMode ? '<div class="page-title"><h1>Media Library</h1></div>' : ''}
+    <div class="upload-zone" id="upload-zone" onclick="document.getElementById('file-upload').click()">
+      <i class="fas fa-cloud-upload-alt"></i>
+      <p style="font-weight:600;font-size:15px">Click to upload or drag & drop</p>
+      <p class="text-muted text-sm">PNG, JPG, WebP, SVG — max 10MB each. Multiple files supported.</p>
+    </div>
+    <input type="file" id="file-upload" style="display:none" accept="image/*" multiple onchange="uploadMedia(this.files)">
+    <div id="upload-prog" style="display:none;margin:12px 0">
+      <div style="background:var(--border);border-radius:4px;height:6px"><div id="upload-bar" style="background:var(--primary);height:6px;border-radius:4px;width:0;transition:width .3s"></div></div>
+      <div id="upload-status" class="text-sm text-muted" style="margin-top:6px">Uploading...</div>
+    </div>
+    <div class="media-grid" id="media-grid" style="margin-top:16px">
+      ${d.data.map(m => `
+        <div class="media-item ${pickerMode?'picker-item':''}" onclick="${pickerMode ? `pickMedia('${m.url}')` : `copyMediaUrl('${m.url}')`}">
+          <img src="${m.url}" alt="${m.alt||''}" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🖼️</text></svg>'">
+          <div class="media-item-info">
+            <div class="media-item-name" title="${m.original_name}">${m.original_name}</div>
+            <div class="media-item-size">${m.width ? m.width + '×' + m.height + ' · ' : ''}${(m.size/1024).toFixed(0)}KB</div>
+          </div>
+          ${!pickerMode ? `<button class="delete-btn" onclick="event.stopPropagation();deleteMedia(${m.id})" title="Delete"><i class="fas fa-trash"></i></button>` : ''}
+        </div>`).join('')}
+    </div>`;
+
+  // Drag and drop
+  const zone = document.getElementById('upload-zone');
+  zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dragover'); });
+  zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
+  zone.addEventListener('drop', e => { e.preventDefault(); zone.classList.remove('dragover'); uploadMedia(e.dataTransfer.files); });
+}
+
+async function uploadMedia(files) {
+  if (!files.length) return;
+  const prog = document.getElementById('upload-prog');
+  const bar = document.getElementById('upload-bar');
+  const status = document.getElementById('upload-status');
+  prog.style.display = 'block';
+  const fd = new FormData();
+  for (const f of files) fd.append('files', f);
+  status.textContent = `Uploading ${files.length} file(s)...`;
+  try {
+    const res = await fetch(API + '/api/media/upload', { method: 'POST', headers: { 'Authorization': 'Bearer ' + getToken() }, body: fd });
+    bar.style.width = '100%';
+    const data = await res.json();
+    if (data.success) { toast(`${data.data.length} file(s) uploaded!`); setTimeout(() => { prog.style.display='none'; bar.style.width='0'; renderMedia(); }, 500); }
+    else { toast(data.error||'Upload failed','error'); prog.style.display='none'; }
+  } catch (e) { toast('Upload failed: ' + e.message, 'error'); prog.style.display='none'; }
+}
+
+function copyMediaUrl(url) {
+  navigator.clipboard.writeText(url).then(() => toast('URL copied to clipboard!')).catch(() => toast(url));
+}
+
+async function deleteMedia(id) {
+  if (!confirm('Delete this file?')) return;
+  try { await request('DELETE', '/api/media/' + id); toast('File deleted'); renderMedia(); }
+  catch (e) { toast(e.message, 'error'); }
+}
+
+function openMediaPicker(targetField) {
+  mediaPickerCallback = (url) => {
+    const el = document.getElementById(targetField);
+    if (el) { el.value = url; el.dispatchEvent(new Event('input')); }
+    closeMediaPicker();
+  };
+  const overlay = document.createElement('div');
+  overlay.id = 'media-picker-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:300;display:flex;align-items:flex-start;justify-content:center;padding:40px 20px;overflow-y:auto';
+  overlay.innerHTML = `
+    <div style="background:#fff;border-radius:14px;width:100%;max-width:900px;box-shadow:0 20px 60px rgba(0,0,0,.2)">
+      <div style="padding:18px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
+        <h3 style="font-size:16px;font-weight:600">Choose from Media Library</h3>
+        <button onclick="closeMediaPicker()" style="border:none;background:var(--bg);cursor:pointer;width:32px;height:32px;border-radius:8px;font-size:16px">✕</button>
+      </div>
+      <div style="padding:24px" id="media-picker-content">Loading...</div>
+    </div>`;
+  document.body.appendChild(overlay);
+  renderMedia(true);
+}
+
+function pickMedia(url) { if (mediaPickerCallback) mediaPickerCallback(url); }
+function closeMediaPicker() { document.getElementById('media-picker-overlay')?.remove(); }
+
+// ════════════════════════════════════════
+// SITE SETTINGS
+// ════════════════════════════════════════
+async function renderSettings() {
+  const s = await request('GET', '/api/settings');
+  document.getElementById('content').innerHTML = `
+    <div class="page-title"><h1>Site Settings</h1><button class="btn btn-primary" onclick="saveSettings()"><i class="fas fa-save"></i> Save All Changes</button></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+      <div>
+        <div class="card">
+          <div class="card-header"><h3><i class="fas fa-building" style="color:var(--primary);margin-right:8px"></i>Business Information</h3></div>
+          <div class="card-body">
+            <div class="form-group"><label class="form-label">Business Name</label><input class="form-input" id="s-site-name" value="${s.site_name||''}"></div>
+            <div class="form-group"><label class="form-label">Tagline</label><input class="form-input" id="s-tagline" value="${s.tagline||''}"></div>
+            <div class="form-group"><label class="form-label">Phone</label><input class="form-input" id="s-phone" value="${s.phone||''}"></div>
+            <div class="form-group"><label class="form-label">Email</label><input class="form-input" id="s-email" type="email" value="${s.email||''}"></div>
+            <div class="form-group"><label class="form-label">Address</label><textarea class="form-textarea" id="s-address">${s.address||''}</textarea></div>
+            <div class="form-group" style="margin-bottom:0"><label class="form-label">WhatsApp Number</label><input class="form-input" id="s-whatsapp" value="${s.whatsapp||''}" placeholder="919885041052 (with country code, no +)"></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><h3><i class="fas fa-share-alt" style="color:var(--primary);margin-right:8px"></i>Social Media</h3></div>
+          <div class="card-body">
+            <div class="form-group"><label class="form-label"><i class="fab fa-linkedin" style="color:#0077b5"></i> LinkedIn URL</label><input class="form-input" id="s-linkedin" value="${s.linkedin||''}" placeholder="https://linkedin.com/company/..."></div>
+            <div class="form-group"><label class="form-label"><i class="fab fa-facebook" style="color:#1877f2"></i> Facebook URL</label><input class="form-input" id="s-facebook" value="${s.facebook||''}" placeholder="https://facebook.com/..."></div>
+            <div class="form-group"><label class="form-label"><i class="fab fa-instagram" style="color:#e4405f"></i> Instagram URL</label><input class="form-input" id="s-instagram" value="${s.instagram||''}" placeholder="https://instagram.com/..."></div>
+            <div class="form-group" style="margin-bottom:0"><label class="form-label"><i class="fab fa-twitter" style="color:#1da1f2"></i> Twitter / X URL</label><input class="form-input" id="s-twitter" value="${s.twitter||''}" placeholder="https://twitter.com/..."></div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="card">
+          <div class="card-header"><h3><i class="fas fa-image" style="color:var(--primary);margin-right:8px"></i>Logo & Branding</h3></div>
+          <div class="card-body">
+            <div style="background:#0F1C35;border-radius:10px;padding:20px;text-align:center;margin-bottom:16px">
+              <img id="logo-prev" src="${s.logo||'/cms-logo.png'}" style="height:40px;width:auto;filter:brightness(0) invert(1)" onerror="this.style.display='none'">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Logo URL</label>
+              <input class="form-input" id="s-logo" value="${s.logo||''}" placeholder="/img/demos/accounting-1/gkm-logo.png" oninput="document.getElementById('logo-prev').src=this.value||'/cms-logo.png'">
+            </div>
+            <button class="btn btn-ghost btn-sm" style="width:100%" onclick="openMediaPicker('s-logo')"><i class="fas fa-images"></i> Choose from Media Library</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><h3><i class="fas fa-search" style="color:var(--primary);margin-right:8px"></i>Analytics & SEO</h3></div>
+          <div class="card-body">
+            <div class="form-group"><label class="form-label">Google Analytics ID</label><input class="form-input" id="s-ga" value="${s.google_analytics||''}" placeholder="G-XXXXXXXXXX"></div>
+            <div class="form-group" style="margin-bottom:0"><label class="form-label">Footer Copyright</label><input class="form-input" id="s-copyright" value="${s.footer_copyright||''}"></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><h3><i class="fas fa-home" style="color:var(--primary);margin-right:8px"></i>Homepage Hero</h3></div>
+          <div class="card-body">
+            <div class="form-group"><label class="form-label">Hero Headline</label><input class="form-input" id="s-hero-heading" value="${s.hero_heading||''}"></div>
+            <div class="form-group" style="margin-bottom:0"><label class="form-label">Hero Subtext</label><textarea class="form-textarea" id="s-hero-sub">${s.hero_sub||''}</textarea></div>
+          </div>
+        </div>
+      </div>
+    </div>`;
+}
+
+async function saveSettings() {
+  const body = {
+    site_name: document.getElementById('s-site-name').value,
+    tagline: document.getElementById('s-tagline').value,
+    phone: document.getElementById('s-phone').value,
+    email: document.getElementById('s-email').value,
+    address: document.getElementById('s-address').value,
+    whatsapp: document.getElementById('s-whatsapp').value,
+    linkedin: document.getElementById('s-linkedin').value,
+    facebook: document.getElementById('s-facebook').value,
+    instagram: document.getElementById('s-instagram').value,
+    twitter: document.getElementById('s-twitter').value,
+    logo: document.getElementById('s-logo').value,
+    google_analytics: document.getElementById('s-ga').value,
+    footer_copyright: document.getElementById('s-copyright').value,
+    hero_heading: document.getElementById('s-hero-heading').value,
+    hero_sub: document.getElementById('s-hero-sub').value,
+  };
+  try { await request('POST', '/api/settings', body); toast('Settings saved! ✓'); }
+  catch (e) { toast(e.message, 'error'); }
+}
+
+// ════════════════════════════════════════
+// LEADS
+// ════════════════════════════════════════
+async function renderLeads() {
+  const d = await request('GET', '/api/leads');
+  document.getElementById('content').innerHTML = `
+    <div class="page-title"><h1>Leads & Enquiries</h1>
+      <select class="form-select" style="width:auto" onchange="filterLeads(this.value)">
+        <option value="">All Leads</option><option value="new">New</option>
+        <option value="contacted">Contacted</option><option value="qualified">Qualified</option><option value="closed">Closed</option>
+      </select>
+    </div>
+    <div class="card">
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Name</th><th>Contact</th><th>Service</th><th>Message</th><th>Date</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody id="leads-tbody">${renderLeadRows(d.data)}</tbody>
+        </table>
+      </div>
+    </div>`;
+}
+
+function renderLeadRows(leads) {
+  if (!leads.length) return '<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-muted)">No leads yet</td></tr>';
+  return leads.map(l => `
+    <tr style="${l.status==='new'?'background:#fffbeb':''}">
+      <td><div style="font-weight:600">${l.name||'Anonymous'}</div></td>
+      <td><div>${l.email||'—'}</div><div class="text-sm text-muted">${l.phone||''}</div></td>
+      <td>${l.service?`<span class="badge badge-info">${l.service}</span>`:'—'}</td>
+      <td><div style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text-muted);font-size:13px" title="${(l.message||'').replace(/"/g,'&quot;')}">${l.message||'—'}</div></td>
+      <td class="text-sm text-muted">${fmtDate(l.created_at)}</td>
+      <td>
+        <select class="form-select" style="padding:4px 8px;font-size:12px;width:130px" onchange="updateLead(${l.id},this.value)">
+          ${['new','contacted','qualified','closed'].map(s=>`<option ${l.status===s?'selected':''} value="${s}">${s.charAt(0).toUpperCase()+s.slice(1)}</option>`).join('')}
+        </select>
+      </td>
+      <td>
+        <div class="flex gap-2">
+          ${l.email?`<a href="mailto:${l.email}" class="btn btn-ghost btn-sm btn-icon" title="Email"><i class="fas fa-envelope"></i></a>`:''}
+          ${l.phone?`<a href="tel:${l.phone}" class="btn btn-ghost btn-sm btn-icon" title="Call"><i class="fas fa-phone"></i></a>`:''}
+          <button class="btn btn-ghost btn-sm btn-icon" onclick="deleteLead(${l.id})" style="color:var(--danger)" title="Delete"><i class="fas fa-trash"></i></button>
+        </div>
+      </td>
+    </tr>`).join('');
+}
+
+async function filterLeads(status) {
+  const url = '/api/leads' + (status ? '?status=' + status : '');
+  const d = await request('GET', url);
+  document.getElementById('leads-tbody').innerHTML = renderLeadRows(d.data);
+}
+
+async function updateLead(id, status) {
+  try { await request('PUT', '/api/leads/' + id, { status }); toast('Updated'); loadNewLeadsBadge(); }
+  catch (e) { toast(e.message, 'error'); }
+}
+
+async function deleteLead(id) {
+  if (!confirm('Delete this lead?')) return;
+  try { await request('DELETE', '/api/leads/' + id); toast('Deleted'); renderLeads(); }
+  catch (e) { toast(e.message, 'error'); }
+}
+
+// ════════════════════════════════════════
+// CLIENTS
+// ════════════════════════════════════════
+async function renderClients() {
+  const d = await request('GET', '/api/clients');
+  document.getElementById('content').innerHTML = `
+    <div class="page-title"><h1>Clients</h1><button class="btn btn-primary" onclick="openClientModal()"><i class="fas fa-plus"></i> Add Client</button></div>
+    <div class="search-row">
+      <div class="search-input" style="flex:1"><i class="fas fa-search"></i><input class="form-input" placeholder="Search by name, email, PAN, GSTIN..." onkeydown="if(event.key==='Enter')searchClients(this.value)"></div>
+    </div>
+    <div class="card">
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Client</th><th>PAN / GSTIN</th><th>Services</th><th>Status</th><th>Since</th><th>Actions</th></tr></thead>
+          <tbody>${d.data.length ? d.data.map(c => `
+            <tr>
+              <td><div style="font-weight:600">${c.name}</div>${c.company?`<div class="text-sm text-muted">${c.company}</div>`:''}<div class="text-sm text-muted">${c.email||''}</div></td>
+              <td><div style="font-family:monospace;font-size:12px">${c.pan||'—'}</div><div style="font-family:monospace;font-size:11px;color:var(--text-muted)">${c.gstin||''}</div></td>
+              <td>${(c.services||[]).map(s=>`<span class="badge badge-info" style="margin:2px">${s}</span>`).join('')||'—'}</td>
+              <td><span class="badge badge-${c.status==='active'?'success':'draft'}">${c.status}</span></td>
+              <td class="text-sm text-muted">${fmtDate(c.created_at)}</td>
+              <td><button class="btn btn-ghost btn-sm btn-icon" onclick="editClient(${c.id})" title="Edit"><i class="fas fa-pen"></i></button></td>
+            </tr>`).join('') : '<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--text-muted)">No clients yet</td></tr>'}
+          </tbody>
+        </table>
+      </div>
+    </div>`;
+}
+
+async function searchClients(q) {
+  const d = await request('GET', '/api/clients?search=' + encodeURIComponent(q));
+  // re-render just tbody
+}
+
+function openClientModal(data = null) {
+  showModal(`
+    <div class="modal-header"><h3>${data ? 'Edit Client' : 'Add Client'}</h3><button class="modal-close" onclick="closeModal()"><i class="fas fa-times"></i></button></div>
+    <div class="modal-body">
+      <div class="form-row"><div class="form-group"><label class="form-label">Full Name <span>*</span></label><input class="form-input" id="cl-name" value="${data?.name||''}"></div><div class="form-group"><label class="form-label">Company</label><input class="form-input" id="cl-company" value="${data?.company||''}"></div></div>
+      <div class="form-row"><div class="form-group"><label class="form-label">Email</label><input class="form-input" id="cl-email" type="email" value="${data?.email||''}"></div><div class="form-group"><label class="form-label">Phone</label><input class="form-input" id="cl-phone" value="${data?.phone||''}"></div></div>
+      <div class="form-row"><div class="form-group"><label class="form-label">PAN Number</label><input class="form-input" id="cl-pan" value="${data?.pan||''}" style="text-transform:uppercase" maxlength="10"></div><div class="form-group"><label class="form-label">GSTIN</label><input class="form-input" id="cl-gstin" value="${data?.gstin||''}" style="text-transform:uppercase" maxlength="15"></div></div>
+      <div class="form-group"><label class="form-label">Services Engaged</label>
+        <div style="display:flex;flex-wrap:wrap;gap:8px">
+          ${['GST & Compliance','Income Tax','Audit & Assurance','NGO & FCRA','CFO Services','Transfer Pricing','NRI Taxation','Accounting & BPO'].map(s=>`<label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:13px"><input type="checkbox" value="${s}" class="cl-svc" ${(data?.services||[]).includes(s)?'checked':''}> ${s}</label>`).join('')}
+        </div>
+      </div>
+      <div class="form-row"><div class="form-group"><label class="form-label">Status</label><select class="form-select" id="cl-status"><option value="active" ${data?.status!=='inactive'?'selected':''}>Active</option><option value="inactive" ${data?.status==='inactive'?'selected':''}>Inactive</option></select></div><div class="form-group"><label class="form-label">Notes</label><input class="form-input" id="cl-notes" value="${data?.notes||''}"></div></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal()">Cancel</button><button class="btn btn-primary" onclick="saveClient(${data?.id||null})"><i class="fas fa-save"></i> Save Client</button></div>`);
+}
+
+async function editClient(id) {
+  const c = await request('GET', '/api/clients/' + id);
+  openClientModal(c);
+}
+
+async function saveClient(id) {
+  const svcs = [...document.querySelectorAll('.cl-svc:checked')].map(el => el.value);
+  const body = { name: document.getElementById('cl-name').value.trim(), company: document.getElementById('cl-company').value, email: document.getElementById('cl-email').value, phone: document.getElementById('cl-phone').value, pan: document.getElementById('cl-pan').value.toUpperCase(), gstin: document.getElementById('cl-gstin').value.toUpperCase(), services: svcs, status: document.getElementById('cl-status').value, notes: document.getElementById('cl-notes').value };
+  if (!body.name) { toast('Name is required','error'); return; }
+  try {
+    if (id) await request('PUT', '/api/clients/' + id, body);
+    else await request('POST', '/api/clients', body);
+    toast(id ? 'Client updated!' : 'Client added!'); closeModal(); renderClients();
+  } catch (e) { toast(e.message,'error'); }
+}
+
+// ════════════════════════════════════════
+// COMPLIANCE
+// ════════════════════════════════════════
+async function renderCompliance() {
+  const d = await request('GET', '/api/compliance');
+  const types = {'GST':'badge-gst','Income Tax':'badge-info','TDS':'badge-tds','ROC':'badge-warning','FCRA':'badge-success','Other':'badge-draft'};
+  document.getElementById('content').innerHTML = `
+    <div class="page-title"><h1>Compliance Calendar</h1><button class="btn btn-primary" onclick="openComplianceModal()"><i class="fas fa-plus"></i> Add Deadline</button></div>
+    <div class="card">
+      <div class="card-body">
+        ${d.data.map(e => `
+          <div class="compliance-row">
+            <div><div style="font-weight:600">${e.title}</div>${e.description?`<div class="text-sm text-muted">${e.description}</div>`:''}</div>
+            <div><span class="badge ${types[e.type]||'badge-draft'}">${e.type}</span></div>
+            <div class="text-sm">${fmtDate(e.due_date)}</div>
+            <div>${daysUntil(e.due_date)}</div>
+            <div>
+              <select class="form-select" style="padding:3px 8px;font-size:12px" onchange="updateCompliance(${e.id},this.value,'${e.title}','${e.due_date}','${e.type}','${e.description||''}')">
+                ${['pending','in-progress','completed','overdue'].map(s=>`<option ${e.status===s?'selected':''} value="${s}">${s}</option>`).join('')}
+              </select>
+            </div>
+          </div>`).join('')}
+      </div>
+    </div>`;
+}
+
+function openComplianceModal() {
+  showModal(`
+    <div class="modal-header"><h3>Add Compliance Deadline</h3><button class="modal-close" onclick="closeModal()"><i class="fas fa-times"></i></button></div>
+    <div class="modal-body">
+      <div class="form-group"><label class="form-label">Title <span>*</span></label><input class="form-input" id="co-title" placeholder="e.g. GSTR-3B June 2025"></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Due Date <span>*</span></label><input class="form-input" id="co-date" type="date"></div>
+        <div class="form-group"><label class="form-label">Type</label><select class="form-select" id="co-type"><option>GST</option><option>Income Tax</option><option>TDS</option><option>ROC</option><option>FCRA</option><option>Other</option></select></div>
+      </div>
+      <div class="form-group"><label class="form-label">Description</label><textarea class="form-textarea" id="co-desc" placeholder="Brief description..."></textarea></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal()">Cancel</button><button class="btn btn-primary" onclick="saveCompliance()"><i class="fas fa-plus"></i> Add Deadline</button></div>`);
+}
+
+async function saveCompliance() {
+  const body = { title: document.getElementById('co-title').value.trim(), due_date: document.getElementById('co-date').value, type: document.getElementById('co-type').value, description: document.getElementById('co-desc').value };
+  if (!body.title || !body.due_date) { toast('Title and date are required','error'); return; }
+  try { await request('POST', '/api/compliance', body); toast('Deadline added!'); closeModal(); renderCompliance(); }
+  catch (e) { toast(e.message,'error'); }
+}
+
+async function updateCompliance(id, status, title, due_date, type, description) {
+  try { await request('PUT', '/api/compliance/' + id, { status, title, due_date, type, description }); toast('Updated'); }
+  catch (e) { toast(e.message,'error'); }
+}
+
+// ════════════════════════════════════════
+// MENUS
+// ════════════════════════════════════════
+async function renderMenus() {
+  document.getElementById('content').innerHTML = `
+    <div class="page-title"><h1>Menus</h1></div>
+    <div class="card">
+      <div class="card-body">
+        <p class="text-muted" style="margin-bottom:16px">Edit your website navigation menus.</p>
+        <div class="form-group"><label class="form-label">Main Navigation</label>
+          <div id="menu-items" style="display:flex;flex-direction:column;gap:8px">
+            ${[
+              {label:'Home',link:'index.html'},
+              {label:'Services',link:'services.html'},
+              {label:'About Us',link:'about.html'},
+              {label:'Industries',link:'industries.html'},
+              {label:'Insights',link:'insights.html'},
+              {label:'AI Tools',link:'ai-tools.html'},
+              {label:'Get Connected',link:'contact.html'},
+            ].map((item,i) => `
+              <div style="display:flex;gap:8px;align-items:center;background:var(--bg);border-radius:8px;padding:10px 12px">
+                <i class="fas fa-grip-vertical" style="color:var(--text-muted);cursor:grab"></i>
+                <input class="form-input" style="flex:1" value="${item.label}" placeholder="Label">
+                <input class="form-input" style="flex:1" value="${item.link}" placeholder="Link">
+                <button class="btn btn-ghost btn-sm btn-icon" style="color:var(--danger)"><i class="fas fa-trash"></i></button>
+              </div>`).join('')}
+          </div>
+          <button class="btn btn-ghost btn-sm" style="margin-top:10px"><i class="fas fa-plus"></i> Add Menu Item</button>
+        </div>
+        <button class="btn btn-primary" onclick="toast('Menu configuration saved! Note: To fully apply menu changes, the website HTML needs to be updated.')"><i class="fas fa-save"></i> Save Menu</button>
+      </div>
+    </div>`;
+}
+
+// ════════════════════════════════════════
+// AI ASSISTANT
+// ════════════════════════════════════════
+async function renderAI() {
+  document.getElementById('content').innerHTML = `
+    <div class="page-title"><h1>GKM AI Assistant</h1></div>
+    <div class="card" style="height:calc(100vh - 200px);min-height:500px;display:flex;flex-direction:column">
+      <div class="card-header" style="flex-shrink:0">
+        <div class="flex gap-2"><span style="width:8px;height:8px;border-radius:50%;background:#10b981;box-shadow:0 0 8px rgba(16,185,129,.8)"></span><span style="font-size:13px">Live · claude-haiku · Indian CA Expert</span></div>
+        <button class="btn btn-ghost btn-sm" onclick="document.getElementById('ai-msgs').innerHTML='';aiHistory=[]"><i class="fas fa-trash"></i> Clear</button>
+      </div>
+      <div id="ai-msgs" style="flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:12px;background:#f8fafb">
+        <div style="display:flex;gap:10px;align-items:flex-start">
+          <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#0F1C35,#2D7A4F);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">🤖</div>
+          <div style="background:#fff;border-radius:4px 14px 14px 14px;padding:12px 16px;max-width:80%;font-size:14px;line-height:1.6;box-shadow:0 1px 3px rgba(0,0,0,.08)">
+            Hello! I'm GKM AI. Ask me anything about <strong>GST, Income Tax, NGO Compliance, FCRA, TDS, NRI Taxation, Transfer Pricing</strong> or any CA topic.
+          </div>
+        </div>
+      </div>
+      <div style="padding:10px 16px;background:#fff;border-top:1px solid var(--border);display:flex;flex-wrap:wrap;gap:6px" id="ai-chips">
+        ${['GST late fee','12A registration','TDS on salary','FCRA renewal','NRI property tax','New vs old regime'].map(q=>`<button class="btn btn-ghost btn-sm" onclick="sendAI('${q}')">${q}</button>`).join('')}
+      </div>
+      <div style="padding:14px 16px;background:#fff;border-top:1px solid var(--border)">
+        <div class="flex gap-2">
+          <input class="form-input" id="ai-inp" placeholder="Ask about GST, Tax, NGO compliance..." onkeydown="if(event.key==='Enter')sendAI()">
+          <button class="btn btn-primary" onclick="sendAI()" style="flex-shrink:0"><i class="fas fa-paper-plane"></i></button>
+        </div>
+      </div>
+    </div>`;
+}
+
+let aiHistory = [];
+async function sendAI(msg) {
+  const inp = document.getElementById('ai-inp');
+  const q = msg || inp.value.trim();
+  if (!q) return;
+  if (inp) inp.value = '';
+  document.getElementById('ai-chips').style.display = 'none';
+  addAIMsg(q, 'user');
+  aiHistory.push({ role:'user', content:q });
+  const typingId = 'typing-' + Date.now();
+  addAIMsg('<span style="display:flex;gap:4px"><span style="animation:bounce 1.2s infinite;display:inline-block">●</span><span style="animation:bounce 1.2s .2s infinite;display:inline-block">●</span><span style="animation:bounce 1.2s .4s infinite;display:inline-block">●</span></span>', 'bot', typingId);
+  try {
+    const d = await request('POST', '/api/ai', { message: q, history: aiHistory.slice(-6) });
+    document.getElementById(typingId)?.remove();
+    const reply = d?.reply || 'Please contact +91 98850 41052';
+    aiHistory.push({ role:'assistant', content:reply });
+    addAIMsg(reply, 'bot');
+  } catch (e) {
+    document.getElementById(typingId)?.remove();
+    addAIMsg('Connection error. Please try again.', 'bot');
+  }
+}
+
+function addAIMsg(text, type, id) {
+  const msgs = document.getElementById('ai-msgs');
+  const isBot = type === 'bot';
+  const div = document.createElement('div');
+  if (id) div.id = id;
+  div.style.cssText = `display:flex;gap:10px;align-items:flex-start;${!isBot?'flex-direction:row-reverse':''}`;
+  div.innerHTML = `
+    <div style="width:32px;height:32px;border-radius:50%;background:${isBot?'linear-gradient(135deg,#0F1C35,#2D7A4F)':'var(--primary)'};display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;color:#fff">${isBot?'🤖':'👤'}</div>
+    <div style="background:${isBot?'#fff':'var(--primary)'};color:${isBot?'var(--text)':'#fff'};border-radius:${isBot?'4px 14px 14px 14px':'14px 4px 14px 14px'};padding:12px 16px;max-width:80%;font-size:14px;line-height:1.65;${isBot?'box-shadow:0 1px 3px rgba(0,0,0,.08)':''}">${text}</div>`;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+// ════════════════════════════════════════
+// MODAL HELPERS
+// ════════════════════════════════════════
+function showModal(html, extraClass = '') {
+  closeModal();
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.id = 'modal-overlay';
+  overlay.innerHTML = `<div class="modal ${extraClass}">${html}</div>`;
+  overlay.addEventListener('click', e => { if (e.target === overlay) closeModal(); });
+  document.body.appendChild(overlay);
+}
+
+function closeModal() {
+  document.getElementById('modal-overlay')?.remove();
+  quillInstance = null;
+}
+
+// ════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════
+const style = document.createElement('style');
+style.textContent = `@keyframes bounce{0%,80%,100%{transform:translateY(0)}40%{transform:translateY(-6px)}}`;
+document.head.appendChild(style);
+
+// Check auth on load
+const storedUser = localStorage.getItem('gkm_cms_user');
+const token = getToken();
+if (token && storedUser) {
+  currentUser = JSON.parse(storedUser);
+  renderShell();
+  navigate('dashboard');
+} else {
+  renderLogin();
+}
+</script>
+</body>
+</html>
